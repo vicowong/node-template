@@ -1,6 +1,6 @@
 # Substrate Node Template
 
-A new FRAME-based Substrate node, ready for hacking :rocket:
+(vicowong) A new FRAME-based Substrate node, ready for hacking :rocket:
 
 ## Getting Started
 
