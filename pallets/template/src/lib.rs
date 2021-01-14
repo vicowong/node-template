@@ -78,8 +78,7 @@ decl_module! {
             let (owner, _block_number) = Proofs::<T>::get(&proof);
             ensure!(owner == sender, Error::<T>::NotProofOwner);
             
-            Proofs::<T>::remove(&proof);
-			Proofs::<T>::insert(&proof, (dest, frame_system::Module::<T>::block_number()));
+	        Proofs::<T>::insert(&proof, (dest, frame_system::Module::<T>::block_number()));
             
             Self::deposit_event(RawEvent::ClaimTransfer(sender, proof));
         }
