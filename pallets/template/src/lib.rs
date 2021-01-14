@@ -36,51 +36,52 @@ decl_error! {
 decl_module! {
 	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
         type Error = Error<T>;
+        
         fn deposit_event() = default;
         
+        // 创建存证
 		#[weight = 10_000]
         fn create_claim(origin, proof: Vec<u8>) {
             let sender = ensure_signed(origin)?;
             ensure!(!Proofs::<T>::contains_key(&proof), Error::<T>::ProofAlreadyClaimed);
+            
             let current_block = <frame_system::Module<T>>::block_number();
+            
             Proofs::<T>::insert(&proof, (&sender, current_block));
+            
             Self::deposit_event(RawEvent::ClaimCreated(sender, proof));
         }
-		
+        
+        
+        // 撤销存证
 		#[weight = 10_000]
         fn revoke_claim(origin, proof: Vec<u8>) {
             let sender = ensure_signed(origin)?;
 			ensure!(Proofs::<T>::contains_key(&proof), Error::<T>::NoSuchProof);
+            
             let (owner, _) = Proofs::<T>::get(&proof);
             ensure!(sender == owner, Error::<T>::NotProofOwner);
+            
             Proofs::<T>::remove(&proof);
+            
             Self::deposit_event(RawEvent::ClaimRevoked(sender, proof));
         }
         
+
 
         // 转移存证，接收两个参数（一个内容哈希值，一个是接收账户地址）
         #[weight =10_000]
 		fn transfer_claim(origin, proof: Vec<u8>, dest: T::AccountId) {
 			let sender = ensure_signed(origin)?;
 			ensure!(Proofs::<T>::contains_key(&proof), Error::<T>::NoSuchProof);
-			let (owner, _block_number) = Proofs::<T>::get(&proof);
+            
+            let (owner, _block_number) = Proofs::<T>::get(&proof);
             ensure!(owner == sender, Error::<T>::NotProofOwner);
+            
             Proofs::<T>::remove(&proof);
 			Proofs::<T>::insert(&proof, (dest, frame_system::Module::<T>::block_number()));
-			Self::deposit_event(RawEvent::ClaimTransfer(sender, proof));
+            
+            Self::deposit_event(RawEvent::ClaimTransfer(sender, proof));
         }
-        
-        // #[weight = 0]
-		// pub fn transfer_claim(origin, claim: Vec<u8>, dest: T::AccountId) -> DispatchResult {
-		// 	let sender = ensure_signed(origin)?;
-
-		// 	ensure!(Proofs::<T>::contains_key(&claim), Error::<T>::ClaimNotExist);
-		// 	let (owner, _block_number) = Proofs::<T>::get(&claim);
-		// 	ensure!(owner == sender, Error::<T>::NotClaimOwner);
-
-		// 	Proofs::<T>::insert(&claim, (dest, frame_system::Module::<T>::block_number()));
-
-		// 	Ok(())
-		// }
     }
 }
